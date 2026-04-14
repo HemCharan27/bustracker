@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bus Tracker - Driver Workspace</title>
+    <style>
+        :root {
+            --bg: #07131f;
+            --panel: rgba(10, 25, 40, 0.84);
+            --panel-strong: rgba(9, 31, 47, 0.95);
+            --line: rgba(132, 212, 255, 0.18);
+            --accent: #64d3ff;
+            --accent-strong: #00aef3;
+            --text: #f4fbff;
+            --muted: #9fb5c5;
+            --success: #4ad991;
+            --danger: #ff7a7a;
+            --shadow: 0 30px 80px rgba(0, 0, 0, 0.38);
+            --warm: #ffc857;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at top left, rgba(100, 211, 255, 0.2), transparent 30%),
+                radial-gradient(circle at bottom right, rgba(255, 200, 87, 0.16), transparent 30%),
+                linear-gradient(145deg, #040b12 0%, #091725 38%, #0b2233 100%);
+        }
+
+        .app {
+            width: min(1180px, calc(100% - 32px));
+            margin: 0 auto;
+            padding: 32px 0 56px;
+        }
+
+        .workspace,
+        .panel,
+        .tracking-panel {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+            border: 1px solid var(--line);
+            border-radius: 28px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(16px);
+        }
+
+        .workspace {
+            padding: 26px;
+        }
+
+        .workspace-head {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .eyebrow {
+            display: inline-block;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--accent);
+            font-size: 0.78rem;
+            margin-bottom: 14px;
+        }
+
+        h1, h2, h3 {
+            margin: 0;
+            font-family: Georgia, "Times New Roman", serif;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+        }
+
+        p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .action-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            border: none;
+            border-radius: 999px;
+            padding: 13px 18px;
+            cursor: pointer;
+            font: inherit;
+            font-weight: 700;
+        }
+
+        .primary {
+            background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+            color: #03111a;
+        }
+
+        .secondary {
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            font-weight: 600;
+        }
+
+        .danger {
+            background: rgba(255, 122, 122, 0.12);
+            color: #ffdede;
+            border: 1px solid rgba(255, 122, 122, 0.18);
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        button:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+
+        .status-box {
+            padding: 16px;
+            border-radius: 18px;
+            background: rgba(4, 14, 22, 0.44);
+            border: 1px solid rgba(132, 212, 255, 0.12);
+        }
+
+        .status-box span {
+            display: block;
+            color: var(--muted);
+            font-size: 0.76rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .status-box strong {
+            display: block;
+        }
+
+        .setup-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px;
+        }
+
+        .panel {
+            padding: 22px;
+        }
+
+        .panel p {
+            margin-top: 10px;
+            margin-bottom: 18px;
+        }
+
+        .field-grid {
+            display: grid;
+            gap: 14px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.92rem;
+            font-weight: 500;
+        }
+
+        input {
+            width: 100%;
+            border-radius: 14px;
+            border: 1px solid rgba(132, 212, 255, 0.16);
+            background: rgba(3, 13, 21, 0.72);
+            padding: 14px 15px;
+            color: var(--text);
+            outline: none;
+            font: inherit;
+        }
+
+        input:focus {
+            border-color: rgba(100, 211, 255, 0.5);
+            box-shadow: 0 0 0 4px rgba(100, 211, 255, 0.12);
+        }
+
+        input[readonly] {
+            opacity: 0.72;
+        }
+
+        .button-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 18px;
+        }
+
+        .file-shell {
+            border-radius: 18px;
+            border: 1px dashed rgba(132, 212, 255, 0.24);
+            padding: 16px;
+            background: rgba(3, 13, 21, 0.44);
+        }
+
+        .file-shell small {
+            display: block;
+            margin-top: 8px;
+            color: var(--muted);
+        }
+
+        .preview {
+            display: grid;
+            grid-template-columns: 112px 1fr;
+            gap: 14px;
+            align-items: center;
+            margin-top: 16px;
+            padding: 14px;
+            border-radius: 18px;
+            border: 1px solid rgba(132, 212, 255, 0.12);
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .preview.hidden {
+            display: none;
+        }
+
+        .preview img {
+            width: 112px;
+            height: 82px;
+            object-fit: cover;
+            border-radius: 12px;
+        }
+
+        .message {
+            margin-top: 14px;
+            padding: 14px 16px;
+            border-radius: 16px;
+            display: none;
+        }
+
+        .message.visible {
+            display: block;
+        }
+
+        .message.info {
+            background: rgba(100, 211, 255, 0.1);
+            border: 1px solid rgba(100, 211, 255, 0.2);
+            color: var(--accent);
+        }
+
+        .message.success {
+            background: rgba(74, 217, 145, 0.12);
+            border: 1px solid rgba(74, 217, 145, 0.18);
+            color: var(--success);
+        }
+
+        .message.error {
+            background: rgba(255, 122, 122, 0.12);
+            border: 1px solid rgba(255, 122, 122, 0.18);
+            color: #ffdede;
+        }
+
+        .tracking-panel {
+            margin-top: 18px;
+            padding: 22px;
+        }
+
+        .tracking-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 14px;
+            margin-top: 18px;
+        }
+
+        .mini-box {
+            padding: 16px;
+            border-radius: 18px;
+            background: rgba(4, 14, 22, 0.44);
+            border: 1px solid rgba(132, 212, 255, 0.12);
+        }
+
+        .mini-box strong {
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .mini-box span {
+            display: block;
+            color: var(--muted);
+            font-size: 0.76rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .ready {
+            color: var(--success);
+        }
+
+        .pending {
+            color: var(--warm);
+        }
+
+        .live {
+            color: var(--accent);
+        }
+
+        @media (max-width: 960px) {
+            .setup-grid,
+            .status-grid,
+            .tracking-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .workspace-head {
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .app {
+                width: min(100% - 20px, 100%);
+                padding-top: 20px;
+                padding-bottom: 28px;
+            }
+
+            .workspace,
+            .panel,
+            .tracking-panel {
+                border-radius: 22px;
+                padding: 22px;
+            }
+
+            .preview {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="app">
+        <section class="workspace" id="workspace">
+            <div class="workspace-head">
+                <div>
+                    <div class="eyebrow">Driver Workspace</div>
+                    <h2 id="workspaceTitle">Driver setup</h2>
+                    <p style="margin-top: 10px;">
+                        Complete the two cards below to unlock live tracking for students.
+                    </p>
+                </div>
+
+                <div class="action-row">
+                    <button class="secondary" id="resetTrackingButton" type="button">Reset tracking view</button>
+                    <button class="danger" id="logoutButton" type="button">Logout</button>
+                </div>
+            </div>
+
+            <div class="status-grid">
+                <div class="status-box">
+                    <span>Driver Profile</span>
+                    <strong id="profileStatus" class="pending">Pending</strong>
+                </div>
+                <div class="status-box">
+                    <span>Bus Details</span>
+                    <strong id="busStatus" class="pending">Pending</strong>
+                </div>
+                <div class="status-box">
+                    <span>Live Tracking</span>
+                    <strong id="trackingStatus" class="pending">Waiting for setup</strong>
+                </div>
+            </div>
+
+            <div class="setup-grid">
+                <article class="panel">
+                    <h3>Driver Information</h3>
+                    <p>Save the driver name, DOB, phone number, and driving licence photo here.</p>
+
+                    <div class="field-grid">
+                        <div>
+                            <label for="driverName">Driver Name</label>
+                            <input id="driverName" type="text" placeholder="Driver full name">
+                        </div>
+                        <div>
+                            <label for="driverDOB">Date of Birth</label>
+                            <input id="driverDOB" type="date">
+                        </div>
+                        <div>
+                            <label for="driverPhone">Phone Number</label>
+                            <input id="driverPhone" type="tel" readonly>
+                        </div>
+                        <div class="file-shell">
+                            <label for="licensePhoto">Driving Licence Photo</label>
+                            <input id="licensePhoto" type="file" accept="image/*">
+                            <small>Supported image files up to 5 MB.</small>
+
+                            <div class="preview hidden" id="licensePreviewWrap">
+                                <img id="licensePreview" alt="Licence preview">
+                                <div>
+                                    <strong>Preview ready</strong>
+                                    <span id="licensePreviewMeta">The selected or saved image will appear here.</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="button-row" style="margin-top: 18px;">
+                        <button class="primary" id="saveDriverButton" type="button">Save driver information</button>
+                    </div>
+
+                    <div class="message" id="driverMessage"></div>
+                </article>
+
+                <article class="panel">
+                    <h3>Bus Details</h3>
+                    <p>Save the bus representation number and bus number plate that students will see.</p>
+
+                    <div class="field-grid">
+                        <div>
+                            <label for="busRepresentationNumber">Bus Representation Number</label>
+                            <input id="busRepresentationNumber" type="text" placeholder="Example: Route A-12">
+                        </div>
+                        <div>
+                            <label for="busNumberPlate">Bus Number Plate</label>
+                            <input id="busNumberPlate" type="text" placeholder="Example: AP09XY2345">
+                        </div>
+                    </div>
+
+                    <div class="button-row" style="margin-top: 18px;">
+                        <button class="primary" id="saveBusButton" type="button">Save bus details</button>
+                    </div>
+
+                    <div class="message" id="busMessage"></div>
+                </article>
+            </div>
+
+            <section class="tracking-panel" id="trackingPanel">
+                <div class="workspace-head" style="margin-bottom: 0;">
+                    <div>
+                        <div class="eyebrow">Live Tracking</div>
+                        <h3>Share this device location</h3>
+                        <p style="margin-top: 10px;">
+                            When both setup blocks are complete, start live location updates from this phone or laptop.
+                        </p>
+                    </div>
+
+                    <div class="action-row">
+                        <button class="primary" id="startTrackingButton" type="button">Start location sharing</button>
+                        <button class="secondary" id="stopTrackingButton" type="button" disabled>Stop sharing</button>
+                    </div>
+                </div>
+
+                <div class="tracking-grid">
+                    <div class="mini-box">
+                        <span>Current Bus</span>
+                        <strong id="currentBusLabel">Waiting for bus details</strong>
+                    </div>
+                    <div class="mini-box">
+                        <span>Coordinates</span>
+                        <strong id="coordinateLabel">No live fix yet</strong>
+                    </div>
+                    <div class="mini-box">
+                        <span>Last Sync</span>
+                        <strong id="syncLabel">Not started</strong>
+                    </div>
+                    <div class="mini-box">
+                        <span>Tracking State</span>
+                        <strong id="trackingLabel">Idle</strong>
+                    </div>
+                </div>
+
+                <div class="message" id="trackingMessage"></div>
+            </section>
+        </section>
+    </main>
+
+    <script>
+        const API_URL = "http://localhost:3000";
+        const DRIVER_STORAGE_KEY = "busTrackerDriverSessionV2";
+
+        // Elements
+        const driverNameInput = document.getElementById("driverName");
+        const driverDOBInput = document.getElementById("driverDOB");
+        const driverPhoneInput = document.getElementById("driverPhone");
+        const licensePhotoInput = document.getElementById("licensePhoto");
+        const licensePreviewWrap = document.getElementById("licensePreviewWrap");
+        const licensePreview = document.getElementById("licensePreview");
+        const licensePreviewMeta = document.getElementById("licensePreviewMeta");
+        const busRepresentationNumberInput = document.getElementById("busRepresentationNumber");
+        const busNumberPlateInput = document.getElementById("busNumberPlate");
+        const profileStatus = document.getElementById("profileStatus");
+        const busStatus = document.getElementById("busStatus");
+        const trackingStatus = document.getElementById("trackingStatus");
+        const currentBusLabel = document.getElementById("currentBusLabel");
+        const coordinateLabel = document.getElementById("coordinateLabel");
+        const syncLabel = document.getElementById("syncLabel");
+        const trackingLabel = document.getElementById("trackingLabel");
+        const workspaceTitle = document.getElementById("workspaceTitle");
+        const startTrackingButton = document.getElementById("startTrackingButton");
+        const stopTrackingButton = document.getElementById("stopTrackingButton");
+
+        let currentUser = null;
+        let currentLicensePhoto = "";
+        let watchId = null;
+        let lastKnownPosition = null;
+
+        // Utility Functions
+        function normalizePhone(value) {
+            return String(value || "").replace(/\D/g, "");
+        }
+
+        function setMessage(elementId, text, type) {
+            const element = document.getElementById(elementId);
+            if (!text) {
+                element.className = "message";
+                element.textContent = "";
+                return;
+            }
+            element.className = `message ${type} visible`;
+            element.textContent = text;
+        }
+
+        function formatTime(value) {
+            const date = value ? new Date(value) : new Date();
+            return `${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+        }
+
+        function driverBlockReady(user) {
+            return Boolean(user && user.driverName && user.driverDOB && user.driverLicensePhoto);
+        }
+
+        function busBlockReady(user) {
+            return Boolean(user && user.busRepresentationNumber && user.busNumberPlate);
+        }
+
+        function trackingReady() {
+            return driverBlockReady(currentUser) && busBlockReady(currentUser);
+        }
+
+        function updatePreview(photoValue, metaText) {
+            currentLicensePhoto = photoValue || "";
+
+            if (!currentLicensePhoto) {
+                licensePreviewWrap.classList.add("hidden");
+                licensePreview.removeAttribute("src");
+                licensePreviewMeta.textContent = "The selected or saved image will appear here.";
+                return;
+            }
+
+            licensePreviewWrap.classList.remove("hidden");
+            licensePreview.src = currentLicensePhoto;
+            licensePreviewMeta.textContent = metaText || "Saved licence image ready.";
+        }
+
+        function saveSession() {
+            if (!currentUser) {
+                localStorage.removeItem(DRIVER_STORAGE_KEY);
+                return;
+            }
+            localStorage.setItem(DRIVER_STORAGE_KEY, JSON.stringify(currentUser));
+        }
+
+        function fillWorkspace() {
+            driverNameInput.value = currentUser.driverName || currentUser.name || "";
+            driverDOBInput.value = currentUser.driverDOB || "";
+            driverPhoneInput.value = currentUser.phone || "";
+            busRepresentationNumberInput.value = currentUser.busRepresentationNumber || "";
+            busNumberPlateInput.value = currentUser.busNumberPlate || "";
+            updatePreview(currentUser.driverLicensePhoto || "");
+
+            workspaceTitle.textContent = currentUser.driverName || currentUser.name
+                ? `Driver setup for ${currentUser.driverName || currentUser.name}`
+                : "Driver setup";
+
+            currentBusLabel.textContent = currentUser.busRepresentationNumber
+                ? `${currentUser.busRepresentationNumber} / ${currentUser.busNumberPlate || "plate pending"}`
+                : "Waiting for bus details";
+
+            refreshStatus();
+        }
+
+        function refreshStatus() {
+            const profileReady = driverBlockReady(currentUser);
+            const busReady = busBlockReady(currentUser);
+            const trackingLive = watchId !== null;
+
+            profileStatus.textContent = profileReady ? "Ready" : "Pending";
+            profileStatus.className = profileReady ? "ready" : "pending";
+
+            busStatus.textContent = busReady ? "Ready" : "Pending";
+            busStatus.className = busReady ? "ready" : "pending";
+
+            if (trackingLive) {
+                trackingStatus.textContent = "Live";
+                trackingStatus.className = "live";
+                trackingLabel.textContent = "Streaming from this device";
+            } else if (trackingReady()) {
+                trackingStatus.textContent = "Ready to start";
+                trackingStatus.className = "ready";
+                trackingLabel.textContent = "Setup complete, waiting to start";
+            } else {
+                trackingStatus.textContent = "Waiting for setup";
+                trackingStatus.className = "pending";
+                trackingLabel.textContent = "Complete both setup blocks first";
+            }
+
+            startTrackingButton.disabled = !trackingReady() || trackingLive;
+            stopTrackingButton.disabled = !trackingLive;
+
+            if (!lastKnownPosition && !trackingLive) {
+                coordinateLabel.textContent = trackingReady() ? "Ready when you start sharing" : "No live fix yet";
+                syncLabel.textContent = "Not started";
+            }
+        }
+
+        async function readFileAsDataUrl(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (event) => resolve(event.target.result);
+                reader.onerror = () => reject(new Error("Unable to read the selected image."));
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function saveDriverInfo() {
+            if (!currentUser) {
+                setMessage("driverMessage", "Login again before saving driver information.", "error");
+                return;
+            }
+
+            const driverName = driverNameInput.value.trim();
+            const driverDOB = driverDOBInput.value;
+            const selectedFile = licensePhotoInput.files[0];
+
+            if (!driverName || !driverDOB) {
+                setMessage("driverMessage", "Driver name and date of birth are required.", "error");
+                return;
+            }
+
+            if (!selectedFile && !currentLicensePhoto) {
+                setMessage("driverMessage", "Upload a driving licence photo before saving.", "error");
+                return;
+            }
+
+            if (selectedFile && selectedFile.size > 5 * 1024 * 1024) {
+                setMessage("driverMessage", "Choose an image smaller than 5 MB.", "error");
+                return;
+            }
+
+            setMessage("driverMessage", "Saving driver information...", "info");
+
+            try {
+                const driverLicensePhoto = selectedFile
+                    ? await readFileAsDataUrl(selectedFile)
+                    : currentLicensePhoto;
+
+                const response = await fetch(`${API_URL}/save-driver-info`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        phone: currentUser.phone,
+                        driverName,
+                        driverDOB,
+                        driverLicensePhoto
+                    })
+                });
+
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || "Unable to save driver information.");
+                }
+
+                currentUser = data.user;
+                saveSession();
+                fillWorkspace();
+                updatePreview(data.user.driverLicensePhoto || driverLicensePhoto, "Saved licence image ready.");
+                setMessage("driverMessage", "Driver information saved successfully.", "success");
+                licensePhotoInput.value = "";
+            } catch (error) {
+                setMessage("driverMessage", error.message || "Unable to save driver information.", "error");
+            }
+        }
+
+        async function saveBusDetails() {
+            if (!currentUser) {
+                setMessage("busMessage", "Login again before saving bus details.", "error");
+                return;
+            }
+
+            const busRepresentationNumber = busRepresentationNumberInput.value.trim();
+            const busNumberPlate = busNumberPlateInput.value.trim();
+
+            if (!busRepresentationNumber || !busNumberPlate) {
+                setMessage("busMessage", "Bus representation number and number plate are required.", "error");
+                return;
+            }
+
+            setMessage("busMessage", "Saving bus details...", "info");
+
+            try {
+                const response = await fetch(`${API_URL}/save-bus-details`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        phone: currentUser.phone,
+                        busRepresentationNumber,
+                        busNumberPlate
+                    })
+                });
+
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || "Unable to save bus details.");
+                }
+
+                currentUser = data.user;
+                saveSession();
+                fillWorkspace();
+                setMessage("busMessage", "Bus details saved successfully.", "success");
+            } catch (error) {
+                setMessage("busMessage", error.message || "Unable to save bus details.", "error");
+            }
+        }
+
+        async function postLocation(position) {
+            const latitude = position.coords.latitude;
+            const longitude = position.coords.longitude;
+            const accuracy = position.coords.accuracy;
+
+            coordinateLabel.textContent = `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
+            syncLabel.textContent = "Sending...";
+            lastKnownPosition = position;
+
+            try {
+                const response = await fetch(`${API_URL}/update-location`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        phone: currentUser.phone,
+                        lat: latitude,
+                        lng: longitude,
+                        accuracy
+                    })
+                });
+
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || "Unable to update live location.");
+                }
+
+                syncLabel.textContent = formatTime(data.location.timestamp);
+                setMessage("trackingMessage", "Live location updated successfully.", "success");
+            } catch (error) {
+                syncLabel.textContent = "Sync failed";
+                setMessage("trackingMessage", error.message || "Unable to update live location.", "error");
+            }
+        }
+
+        function stopTracking(showMessage) {
+            if (watchId !== null) {
+                navigator.geolocation.clearWatch(watchId);
+            }
+
+            watchId = null;
+            refreshStatus();
+
+            if (showMessage) {
+                setMessage("trackingMessage", "Location sharing stopped on this device.", "info");
+            }
+
+            if (lastKnownPosition) {
+                syncLabel.textContent = `Stopped after ${formatTime()}`;
+            }
+        }
+
+        function startTracking() {
+            if (!trackingReady()) {
+                setMessage("trackingMessage", "Save both setup blocks before starting live tracking.", "error");
+                return;
+            }
+
+            if (!navigator.geolocation) {
+                setMessage("trackingMessage", "This browser does not support geolocation.", "error");
+                return;
+            }
+
+            if (watchId !== null) {
+                setMessage("trackingMessage", "Location sharing is already running.", "info");
+                return;
+            }
+
+            setMessage("trackingMessage", "Waiting for the first GPS fix from this device...", "info");
+
+            watchId = navigator.geolocation.watchPosition(
+                postLocation,
+                (error) => {
+                    const errorMessages = {
+                        1: "Location permission was denied on this device.",
+                        2: "Current location is unavailable. Move to an open area and try again.",
+                        3: "The device took too long to return a GPS fix."
+                    };
+
+                    setMessage(
+                        "trackingMessage",
+                        errorMessages[error.code] || "Unable to access device location.",
+                        "error"
+                    );
+                    stopTracking(false);
+                },
+                {
+                    enableHighAccuracy: true,
+                    maximumAge: 0,
+                    timeout: 15000
+                }
+            );
+
+            refreshStatus();
+        }
+
+        function logout() {
+            stopTracking(false);
+            currentUser = null;
+            currentLicensePhoto = "";
+            lastKnownPosition = null;
+            saveSession();
+
+            driverNameInput.value = "";
+            driverDOBInput.value = "";
+            driverPhoneInput.value = "";
+            busRepresentationNumberInput.value = "";
+            busNumberPlateInput.value = "";
+            licensePhotoInput.value = "";
+
+            updatePreview("");
+            currentBusLabel.textContent = "Waiting for bus details";
+            coordinateLabel.textContent = "No live fix yet";
+            syncLabel.textContent = "Not started";
+            trackingLabel.textContent = "Idle";
+
+            setMessage("driverMessage", "", "");
+            setMessage("busMessage", "", "");
+            setMessage("trackingMessage", "", "");
+
+            refreshStatus();
+            localStorage.removeItem(DRIVER_STORAGE_KEY);
+            window.location.href = "login.html";
+        }
+
+        function resetTrackingView() {
+            setMessage("trackingMessage", "", "");
+            coordinateLabel.textContent = lastKnownPosition
+                ? `${lastKnownPosition.coords.latitude.toFixed(5)}, ${lastKnownPosition.coords.longitude.toFixed(5)}`
+                : "No live fix yet";
+            syncLabel.textContent = lastKnownPosition ? "Awaiting next update" : "Not started";
+        }
+
+        // Event Listeners
+        document.getElementById("saveDriverButton").addEventListener("click", saveDriverInfo);
+        document.getElementById("saveBusButton").addEventListener("click", saveBusDetails);
+        document.getElementById("startTrackingButton").addEventListener("click", startTracking);
+        document.getElementById("stopTrackingButton").addEventListener("click", () => stopTracking(true));
+        document.getElementById("resetTrackingButton").addEventListener("click", resetTrackingView);
+        document.getElementById("logoutButton").addEventListener("click", logout);
+
+        licensePhotoInput.addEventListener("change", async () => {
+            const selectedFile = licensePhotoInput.files[0];
+
+            if (!selectedFile) {
+                updatePreview(currentUser ? currentUser.driverLicensePhoto : "");
+                return;
+            }
+
+            if (selectedFile.size > 5 * 1024 * 1024) {
+                setMessage("driverMessage", "Choose an image smaller than 5 MB.", "error");
+                licensePhotoInput.value = "";
+                return;
+            }
+
+            try {
+                const photoDataUrl = await readFileAsDataUrl(selectedFile);
+                updatePreview(photoDataUrl, "Selected image preview ready.");
+            } catch (error) {
+                setMessage("driverMessage", error.message || "Unable to preview the selected image.", "error");
+                licensePhotoInput.value = "";
+            }
+        });
+
+        // Bootstrap
+        (function bootstrap() {
+            const savedSession = localStorage.getItem(DRIVER_STORAGE_KEY);
+
+            if (!savedSession) {
+                window.location.href = "login.html";
+                return;
+            }
+
+            try {
+                currentUser = JSON.parse(savedSession);
+                fillWorkspace();
+            } catch (error) {
+                localStorage.removeItem(DRIVER_STORAGE_KEY);
+                window.location.href = "login.html";
+            }
+        })();
+    </script>
+</body>
+</html>

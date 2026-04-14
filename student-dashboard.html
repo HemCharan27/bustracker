@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bus Tracker - Student Dashboard</title>
+    <style>
+        :root {
+            --bg: #f2efe6;
+            --ink: #172620;
+            --muted: #58685d;
+            --card: rgba(255, 252, 245, 0.86);
+            --line: rgba(23, 38, 32, 0.12);
+            --green: #245b46;
+            --green-soft: #2f7a5f;
+            --amber: #d39a36;
+            --amber-soft: #f7c96a;
+            --danger: #b9554f;
+            --shadow: 0 24px 60px rgba(53, 49, 35, 0.16);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Segoe UI", Tahoma, sans-serif;
+            color: var(--ink);
+            background: linear-gradient(180deg, #f8f3e7 0%, #eee6d5 100%);
+        }
+
+        .app {
+            width: min(1180px, calc(100% - 32px));
+            margin: 0 auto;
+            padding: 32px 0 48px;
+        }
+
+        .dashboard,
+        .surface,
+        .result-card,
+        .list-card {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 28px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(16px);
+        }
+
+        .dashboard-head {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            padding: 0 26px;
+            padding-top: 26px;
+        }
+
+        .eyebrow {
+            display: inline-block;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--green-soft);
+            font-size: 0.78rem;
+            margin-bottom: 14px;
+        }
+
+        h1, h2, h3 {
+            margin: 0;
+            font-family: Georgia, "Times New Roman", serif;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+        }
+
+        p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .action-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            border: none;
+            border-radius: 999px;
+            padding: 13px 18px;
+            cursor: pointer;
+            font: inherit;
+            font-weight: 700;
+        }
+
+        .primary {
+            background: linear-gradient(135deg, var(--green), var(--green-soft));
+            color: #f9fff9;
+        }
+
+        .secondary {
+            background: rgba(255, 255, 255, 0.7);
+            color: var(--ink);
+            border: 1px solid rgba(23, 38, 32, 0.12);
+            font-weight: 600;
+        }
+
+        .danger {
+            background: rgba(185, 85, 79, 0.1);
+            color: var(--danger);
+            border: 1px solid rgba(185, 85, 79, 0.18);
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        button:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+            padding: 0 26px;
+            margin-bottom: 20px;
+        }
+
+        .stat-box {
+            padding: 16px;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.55);
+            border: 1px solid rgba(23, 38, 32, 0.09);
+        }
+
+        .stat-box span {
+            display: block;
+            color: var(--muted);
+            font-size: 0.76rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .stat-box strong {
+            display: block;
+            font-size: 1.2rem;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: 0.95fr 1.05fr;
+            gap: 14px;
+            padding: 0 26px;
+            margin-bottom: 18px;
+        }
+
+        .surface {
+            padding: 22px;
+        }
+
+        .surface p {
+            margin-top: 10px;
+            margin-bottom: 18px;
+        }
+
+        .summary-box {
+            padding: 16px;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.55);
+            border: 1px solid rgba(23, 38, 32, 0.09);
+        }
+
+        .summary-box span {
+            display: block;
+            color: var(--muted);
+            font-size: 0.76rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .summary-box strong {
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .summary-box p {
+            margin: 0;
+            font-size: 0.9rem;
+        }
+
+        .field-grid {
+            display: grid;
+            gap: 14px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.92rem;
+            font-weight: 500;
+        }
+
+        input, select {
+            width: 100%;
+            border-radius: 14px;
+            border: 1px solid rgba(23, 38, 32, 0.12);
+            background: rgba(255, 255, 255, 0.8);
+            padding: 14px 15px;
+            color: var(--ink);
+            outline: none;
+            font: inherit;
+        }
+
+        input:focus, select:focus {
+            border-color: rgba(36, 91, 70, 0.42);
+            box-shadow: 0 0 0 4px rgba(36, 91, 70, 0.1);
+        }
+
+        .button-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 18px;
+        }
+
+        .warm {
+            background: linear-gradient(135deg, var(--amber), var(--amber-soft));
+            color: #412707;
+        }
+
+        .message {
+            margin-top: 14px;
+            padding: 14px 16px;
+            border-radius: 16px;
+            display: none;
+        }
+
+        .message.visible {
+            display: block;
+        }
+
+        .message.info {
+            background: rgba(36, 91, 70, 0.1);
+            border: 1px solid rgba(36, 91, 70, 0.18);
+            color: var(--green);
+        }
+
+        .message.success {
+            background: rgba(211, 154, 54, 0.14);
+            border: 1px solid rgba(211, 154, 54, 0.2);
+            color: var(--amber);
+        }
+
+        .message.error {
+            background: rgba(185, 85, 79, 0.1);
+            border: 1px solid rgba(185, 85, 79, 0.18);
+            color: var(--danger);
+        }
+
+        .result-card, .list-card {
+            padding: 22px;
+            margin: 0 26px 18px;
+        }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 14px;
+            margin-top: 18px;
+        }
+
+        .mini-result {
+            padding: 16px;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.55);
+            border: 1px solid rgba(23, 38, 32, 0.09);
+        }
+
+        .mini-result span {
+            display: block;
+            color: var(--muted);
+            font-size: 0.76rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .mini-result strong {
+            display: block;
+        }
+
+        .meta-links {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+
+        .meta-links a {
+            color: var(--green);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .bus-list {
+            display: grid;
+            gap: 14px;
+        }
+
+        .bus-item {
+            padding: 16px;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.62);
+            border: 1px solid rgba(23, 38, 32, 0.09);
+        }
+
+        .bus-item-head {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .bus-item strong {
+            display: block;
+            font-size: 1rem;
+        }
+
+        .bus-item p {
+            margin-top: 8px;
+            margin-bottom: 0;
+        }
+
+        .empty-state {
+            padding: 18px;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.62);
+            border: 1px dashed rgba(23, 38, 32, 0.18);
+            color: var(--muted);
+        }
+
+        .good {
+            color: var(--green-soft);
+        }
+
+        .waiting {
+            color: var(--amber);
+        }
+
+        .live {
+            color: var(--green-soft);
+        }
+
+        @media (max-width: 960px) {
+            .stats-row,
+            .summary-grid,
+            .result-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .dashboard-head {
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .app {
+                width: min(100% - 20px, 100%);
+                padding-top: 20px;
+                padding-bottom: 28px;
+            }
+
+            .dashboard-head,
+            .stats-row,
+            .summary-grid {
+                padding-left: 20px;
+                padding-right: 20px;
+            }
+
+            .result-card, .list-card {
+                margin-left: 20px;
+                margin-right: 20px;
+                border-radius: 22px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="app">
+        <section class="dashboard" id="dashboard">
+            <div class="dashboard-head">
+                <div>
+                    <div class="eyebrow">Live Tracker</div>
+                    <h2 id="welcomeTitle">Student dashboard</h2>
+                    <p style="margin-top: 10px;">
+                        Pick a college to sort the currently active buses by distance.
+                    </p>
+                </div>
+
+                <div class="action-row">
+                    <button class="secondary" id="refreshButton" type="button">Refresh buses</button>
+                    <button class="danger" id="logoutButton" type="button">Logout</button>
+                </div>
+            </div>
+
+            <div class="stats-row">
+                <div class="stat-box">
+                    <span>Selected College</span>
+                    <strong id="selectedCollegeStatus" class="waiting">Not selected</strong>
+                </div>
+                <div class="stat-box">
+                    <span>Nearest Bus</span>
+                    <strong id="nearestStatus" class="waiting">Waiting for selection</strong>
+                </div>
+                <div class="stat-box">
+                    <span>Auto Refresh</span>
+                    <strong id="refreshStatus" class="waiting">Paused</strong>
+                </div>
+            </div>
+
+            <div class="summary-grid">
+                <section class="surface">
+                    <h3>Student Profile</h3>
+                    <p>Logged-in student details saved from the login form.</p>
+
+                    <div class="summary-box">
+                        <span>Student</span>
+                        <strong id="profileName">-</strong>
+                        <p id="profileMeta">Registration number and phone will appear here.</p>
+                    </div>
+                </section>
+
+                <section class="surface">
+                    <h3>College Selector</h3>
+                    <p>Choose the college campus that should be used for distance comparison.</p>
+
+                    <div class="field-grid">
+                        <div>
+                            <label for="collegeSelect">College</label>
+                            <select id="collegeSelect"></select>
+                        </div>
+                    </div>
+
+                    <div class="button-row" style="margin-top: 18px;">
+                        <button class="warm" id="applyCollegeButton" type="button">Track this college</button>
+                    </div>
+
+                    <div class="message" id="collegeMessage"></div>
+                </section>
+            </div>
+
+            <section class="result-card">
+                <div class="eyebrow">Nearest Bus</div>
+                <h3 id="nearestBusTitle">Select a college to begin</h3>
+                <p id="nearestBusCopy">
+                    Once a college is selected, the nearest live bus from the driver side will be highlighted here.
+                </p>
+
+                <div class="result-grid">
+                    <div class="mini-result">
+                        <span>Route</span>
+                        <strong id="routeLabel">-</strong>
+                    </div>
+                    <div class="mini-result">
+                        <span>Driver</span>
+                        <strong id="driverLabel">-</strong>
+                    </div>
+                    <div class="mini-result">
+                        <span>Distance</span>
+                        <strong id="distanceLabel">-</strong>
+                    </div>
+                    <div class="mini-result">
+                        <span>Last Update</span>
+                        <strong id="lastUpdateLabel">-</strong>
+                    </div>
+                </div>
+
+                <div class="meta-links">
+                    <a id="collegeMapLink" href="#" target="_blank" rel="noopener noreferrer">Open college map</a>
+                    <a id="busMapLink" href="#" target="_blank" rel="noopener noreferrer">Open nearest bus map</a>
+                </div>
+
+                <div class="message" id="resultMessage"></div>
+            </section>
+
+            <section class="list-card">
+                <div class="eyebrow">Active Buses</div>
+                <h3>Live buses sorted by distance</h3>
+                <p>The list below refreshes from driver location updates.</p>
+
+                <div class="bus-list" id="busList"></div>
+            </section>
+        </section>
+    </main>
+
+    <script>
+        const API_URL = "http://localhost:3000";
+        const STUDENT_STORAGE_KEY = "busTrackerStudentSessionV2";
+        const COLLEGE_KEY = "busTrackerSelectedCollegeV2";
+        const REFRESH_MS = 15000;
+
+        const colleges = [
+            { id: "north-campus", name: "North Campus", latitude: 17.4544, longitude: 78.4867 },
+            { id: "city-engineering", name: "City Engineering College", latitude: 17.4949, longitude: 78.3917 },
+            { id: "riverfront-college", name: "Riverfront Arts and Science College", latitude: 17.3722, longitude: 78.4909 },
+            { id: "hill-view-tech", name: "Hill View Institute of Technology", latitude: 17.5534, longitude: 78.4839 }
+        ];
+
+        // Elements
+        const collegeSelect = document.getElementById("collegeSelect");
+        const selectedCollegeStatus = document.getElementById("selectedCollegeStatus");
+        const nearestStatus = document.getElementById("nearestStatus");
+        const refreshStatus = document.getElementById("refreshStatus");
+        const welcomeTitle = document.getElementById("welcomeTitle");
+        const profileName = document.getElementById("profileName");
+        const profileMeta = document.getElementById("profileMeta");
+        const nearestBusTitle = document.getElementById("nearestBusTitle");
+        const nearestBusCopy = document.getElementById("nearestBusCopy");
+        const routeLabel = document.getElementById("routeLabel");
+        const driverLabel = document.getElementById("driverLabel");
+        const distanceLabel = document.getElementById("distanceLabel");
+        const lastUpdateLabel = document.getElementById("lastUpdateLabel");
+        const collegeMapLink = document.getElementById("collegeMapLink");
+        const busMapLink = document.getElementById("busMapLink");
+        const busList = document.getElementById("busList");
+
+        let currentUser = null;
+        let selectedCollege = null;
+        let refreshTimer = null;
+
+        // Utility Functions
+        function normalizePhone(value) {
+            return String(value || "").replace(/\D/g, "");
+        }
+
+        function setMessage(elementId, text, type) {
+            const element = document.getElementById(elementId);
+            if (!text) {
+                element.className = "message";
+                element.textContent = "";
+                return;
+            }
+            element.className = `message ${type} visible`;
+            element.textContent = text;
+        }
+
+        function formatTime(value) {
+            const date = new Date(value);
+            return `${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+        }
+
+        function formatDistance(distanceKm) {
+            if (distanceKm < 1) {
+                return `${Math.round(distanceKm * 1000)} m`;
+            }
+            return `${distanceKm.toFixed(2)} km`;
+        }
+
+        function haversineDistance(lat1, lon1, lat2, lon2) {
+            const toRad = (value) => (value * Math.PI) / 180;
+            const earthRadiusKm = 6371;
+            const dLat = toRad(lat2 - lat1);
+            const dLon = toRad(lon2 - lon1);
+            const a =
+                Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(toRad(lat1)) *
+                    Math.cos(toRad(lat2)) *
+                    Math.sin(dLon / 2) *
+                    Math.sin(dLon / 2);
+            return 2 * earthRadiusKm * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        }
+
+        function setMapLink(anchor, latitude, longitude) {
+            if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+                anchor.href = "#";
+                anchor.style.pointerEvents = "none";
+                anchor.style.opacity = "0.55";
+                return;
+            }
+            anchor.href = `https://www.google.com/maps?q=${latitude},${longitude}`;
+            anchor.style.pointerEvents = "auto";
+            anchor.style.opacity = "1";
+        }
+
+        function renderCollegeOptions() {
+            collegeSelect.innerHTML = '<option value="">Select a college</option>';
+            colleges.forEach((college) => {
+                const option = document.createElement("option");
+                option.value = college.id;
+                option.textContent = college.name;
+                collegeSelect.appendChild(option);
+            });
+        }
+
+        function saveSession() {
+            if (!currentUser) {
+                localStorage.removeItem(STUDENT_STORAGE_KEY);
+            } else {
+                localStorage.setItem(STUDENT_STORAGE_KEY, JSON.stringify(currentUser));
+            }
+
+            if (!selectedCollege) {
+                localStorage.removeItem(COLLEGE_KEY);
+            } else {
+                localStorage.setItem(COLLEGE_KEY, selectedCollege.id);
+            }
+        }
+
+        function fillDashboard() {
+            const displayName = currentUser ? currentUser.name || "Student" : "Student";
+            welcomeTitle.textContent = `${displayName}'s dashboard`;
+            profileName.textContent = currentUser ? displayName : "-";
+            profileMeta.textContent = currentUser
+                ? `Registration No: ${currentUser.regNo || "-"} | Phone: ${currentUser.phone || "-"}`
+                : "Registration number and phone will appear here.";
+
+            if (selectedCollege) {
+                collegeSelect.value = selectedCollege.id;
+                selectedCollegeStatus.textContent = selectedCollege.name;
+                selectedCollegeStatus.className = "good";
+                setMapLink(collegeMapLink, selectedCollege.latitude, selectedCollege.longitude);
+            } else {
+                selectedCollegeStatus.textContent = "Not selected";
+                selectedCollegeStatus.className = "waiting";
+                setMapLink(collegeMapLink, NaN, NaN);
+            }
+        }
+
+        function resetResultArea() {
+            nearestBusTitle.textContent = selectedCollege
+                ? `Finding the nearest bus for ${selectedCollege.name}`
+                : "Select a college to begin";
+            nearestBusCopy.textContent = selectedCollege
+                ? "The live list below will sort buses using the selected college coordinates."
+                : "Once a college is selected, the nearest live bus from the driver side will be highlighted here.";
+            routeLabel.textContent = "-";
+            driverLabel.textContent = "-";
+            distanceLabel.textContent = "-";
+            lastUpdateLabel.textContent = "-";
+            nearestStatus.textContent = selectedCollege ? "Looking for active buses" : "Waiting for selection";
+            nearestStatus.className = "waiting";
+            setMapLink(busMapLink, NaN, NaN);
+            busList.innerHTML = '<div class="empty-state">No active bus data yet.</div>';
+        }
+
+        function buildSortedBuses(buses) {
+            return buses
+                .filter((bus) => bus.currentLocation)
+                .map((bus) => {
+                    const distanceKm = haversineDistance(
+                        selectedCollege.latitude,
+                        selectedCollege.longitude,
+                        Number(bus.currentLocation.latitude),
+                        Number(bus.currentLocation.longitude)
+                    );
+                    return { ...bus, distanceKm };
+                })
+                .sort((a, b) => a.distanceKm - b.distanceKm);
+        }
+
+        function renderBusList(sortedBuses) {
+            if (!sortedBuses.length) {
+                busList.innerHTML = '<div class="empty-state">No active buses are currently sharing location for this college.</div>';
+                return;
+            }
+
+            busList.innerHTML = "";
+            sortedBuses.forEach((bus, index) => {
+                const item = document.createElement("article");
+                item.className = "bus-item";
+
+                const accuracy = Number.isFinite(Number(bus.currentLocation.accuracy))
+                    ? `${Math.round(Number(bus.currentLocation.accuracy))} m GPS accuracy`
+                    : "GPS accuracy not available";
+
+                item.innerHTML = `
+                    <div class="bus-item-head">
+                        <div>
+                            <strong>${index === 0 ? "Nearest Bus" : bus.busRepresentationNumber || "Bus route"}</strong>
+                            <p>${bus.busRepresentationNumber || "Route pending"} | ${bus.busNumberPlate || "Plate pending"}</p>
+                        </div>
+                        <div class="${index === 0 ? "good" : ""}">${formatDistance(bus.distanceKm)}</div>
+                    </div>
+                    <p>Driver: ${bus.driverName || "Driver profile pending"}</p>
+                    <p>Coordinates: ${Number(bus.currentLocation.latitude).toFixed(5)}, ${Number(bus.currentLocation.longitude).toFixed(5)}</p>
+                    <p>Last update: ${formatTime(bus.currentLocation.timestamp)}</p>
+                    <p>${accuracy}</p>
+                    <div class="meta-links">
+                        <a href="https://www.google.com/maps?q=${bus.currentLocation.latitude},${bus.currentLocation.longitude}" target="_blank" rel="noopener noreferrer">Open bus map</a>
+                    </div>
+                `;
+                busList.appendChild(item);
+            });
+        }
+
+        function updateNearestBus(sortedBuses) {
+            if (!selectedCollege) {
+                resetResultArea();
+                return;
+            }
+
+            if (!sortedBuses.length) {
+                nearestBusTitle.textContent = `No active buses near ${selectedCollege.name}`;
+                nearestBusCopy.textContent = "Drivers need to start live location sharing before buses appear here.";
+                routeLabel.textContent = "-";
+                driverLabel.textContent = "-";
+                distanceLabel.textContent = "-";
+                lastUpdateLabel.textContent = "-";
+                nearestStatus.textContent = "No active buses";
+                nearestStatus.className = "waiting";
+                setMapLink(busMapLink, NaN, NaN);
+                setMessage("resultMessage", "No driver locations are active right now.", "info");
+                return;
+            }
+
+            const nearestBus = sortedBuses[0];
+            nearestBusTitle.textContent = `${nearestBus.busRepresentationNumber || "Bus"} is closest to ${selectedCollege.name}`;
+            nearestBusCopy.textContent = `This bus is currently the nearest active driver location to the selected college.`;
+            routeLabel.textContent = `${nearestBus.busRepresentationNumber || "-"} / ${nearestBus.busNumberPlate || "-"}`;
+            driverLabel.textContent = nearestBus.driverName || "Driver profile pending";
+            distanceLabel.textContent = formatDistance(nearestBus.distanceKm);
+            lastUpdateLabel.textContent = formatTime(nearestBus.currentLocation.timestamp);
+            nearestStatus.textContent = "Nearest bus ready";
+            nearestStatus.className = "good";
+            setMapLink(
+                busMapLink,
+                Number(nearestBus.currentLocation.latitude),
+                Number(nearestBus.currentLocation.longitude)
+            );
+            setMessage("resultMessage", "Nearest bus updated from the latest live driver locations.", "success");
+        }
+
+        async function refreshBuses() {
+            if (!selectedCollege) {
+                setMessage("resultMessage", "Choose a college before loading buses.", "info");
+                resetResultArea();
+                return;
+            }
+
+            refreshStatus.textContent = "Checking live buses";
+            refreshStatus.className = "waiting";
+
+            try {
+                const response = await fetch(`${API_URL}/active-buses`);
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || "Unable to load active buses.");
+                }
+
+                const sortedBuses = buildSortedBuses(data.buses || []);
+                renderBusList(sortedBuses);
+                updateNearestBus(sortedBuses);
+                refreshStatus.textContent = `Live every ${REFRESH_MS / 1000}s`;
+                refreshStatus.className = "live";
+            } catch (error) {
+                refreshStatus.textContent = "Refresh failed";
+                refreshStatus.className = "waiting";
+                setMessage("resultMessage", error.message || "Unable to load active buses.", "error");
+                busList.innerHTML = '<div class="empty-state">Active buses could not be loaded from the backend.</div>';
+            }
+        }
+
+        function restartAutoRefresh() {
+            if (refreshTimer) {
+                clearInterval(refreshTimer);
+                refreshTimer = null;
+            }
+
+            if (!currentUser || !selectedCollege) {
+                refreshStatus.textContent = "Paused";
+                refreshStatus.className = "waiting";
+                return;
+            }
+
+            refreshBuses();
+            refreshTimer = setInterval(refreshBuses, REFRESH_MS);
+        }
+
+        function applySelectedCollege() {
+            const collegeId = collegeSelect.value;
+            selectedCollege = colleges.find((college) => college.id === collegeId) || null;
+            saveSession();
+            fillDashboard();
+
+            if (!selectedCollege) {
+                setMessage("collegeMessage", "Select a college from the list first.", "error");
+                resetResultArea();
+                restartAutoRefresh();
+                return;
+            }
+
+            setMessage("collegeMessage", `${selectedCollege.name} is now the active college filter.`, "success");
+            setMessage("resultMessage", "", "");
+            resetResultArea();
+            restartAutoRefresh();
+        }
+
+        function logout() {
+            currentUser = null;
+            selectedCollege = null;
+            saveSession();
+
+            if (refreshTimer) {
+                clearInterval(refreshTimer);
+                refreshTimer = null;
+            }
+
+            localStorage.removeItem(STUDENT_STORAGE_KEY);
+            localStorage.removeItem(COLLEGE_KEY);
+            window.location.href = "login.html";
+        }
+
+        // Event Listeners
+        document.getElementById("refreshButton").addEventListener("click", refreshBuses);
+        document.getElementById("logoutButton").addEventListener("click", logout);
+        document.getElementById("applyCollegeButton").addEventListener("click", applySelectedCollege);
+
+        // Bootstrap
+        (function bootstrap() {
+            const savedSession = localStorage.getItem(STUDENT_STORAGE_KEY);
+            const savedCollegeId = localStorage.getItem(COLLEGE_KEY);
+
+            if (!savedSession) {
+                window.location.href = "login.html";
+                return;
+            }
+
+            try {
+                currentUser = JSON.parse(savedSession);
+                selectedCollege = colleges.find((college) => college.id === savedCollegeId) || null;
+                renderCollegeOptions();
+                resetResultArea();
+                fillDashboard();
+            } catch (error) {
+                localStorage.removeItem(STUDENT_STORAGE_KEY);
+                localStorage.removeItem(COLLEGE_KEY);
+                window.location.href = "login.html";
+            }
+        })();
+    </script>
+</body>
+</html>

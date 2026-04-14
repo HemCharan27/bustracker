@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bus Tracker - Bus Search</title>
+    <style>
+        :root {
+            --bg: #f2efe6;
+            --ink: #172620;
+            --muted: #58685d;
+            --card: rgba(255, 252, 245, 0.86);
+            --line: rgba(23, 38, 32, 0.12);
+            --green: #245b46;
+            --green-soft: #2f7a5f;
+            --amber: #d39a36;
+            --danger: #b9554f;
+            --shadow: 0 24px 60px rgba(53, 49, 35, 0.16);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Segoe UI", Tahoma, sans-serif;
+            color: var(--ink);
+            background: linear-gradient(180deg, #f8f3e7 0%, #eee6d5 100%);
+        }
+
+        .app {
+            width: min(1200px, calc(100% - 32px));
+            margin: 0 auto;
+            padding: 32px 0 48px;
+        }
+
+        .header {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 28px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(16px);
+            padding: 32px;
+            margin-bottom: 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: 2rem;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        button {
+            border: none;
+            border-radius: 999px;
+            padding: 11px 20px;
+            cursor: pointer;
+            font: inherit;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .btn-logout {
+            background: rgba(185, 85, 79, 0.1);
+            color: var(--danger);
+            border: 1px solid rgba(185, 85, 79, 0.2);
+        }
+
+        .btn-logout:hover {
+            background: rgba(185, 85, 79, 0.15);
+        }
+
+        .buses-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 24px;
+        }
+
+        .bus-card {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            padding: 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .bus-card:hover {
+            border-color: var(--green);
+            transform: translateY(-8px);
+            box-shadow: 0 32px 48px rgba(36, 91, 70, 0.15);
+        }
+
+        .bus-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 16px;
+        }
+
+        .bus-number {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--green);
+            font-family: Georgia, "Times New Roman", serif;
+        }
+
+        .distance-badge {
+            background: linear-gradient(135deg, var(--green), var(--green-soft));
+            color: white;
+            padding: 6px 12px;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .bus-info {
+            display: grid;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            font-size: 0.9rem;
+            color: var(--muted);
+            font-weight: 500;
+        }
+
+        .info-value {
+            font-weight: 600;
+            color: var(--ink);
+        }
+
+        .location-status {
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #4caf50;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .view-button {
+            width: 100%;
+            background: linear-gradient(135deg, var(--green), var(--green-soft));
+            color: white;
+            padding: 12px;
+            border-radius: 12px;
+            font-weight: 600;
+            margin-top: 16px;
+        }
+
+        .view-button:hover {
+            opacity: 0.9;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 32px;
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 28px;
+            color: var(--muted);
+        }
+
+        .empty-state h2 {
+            margin: 0 0 12px 0;
+            color: var(--ink);
+        }
+
+        .refresh-info {
+            font-size: 0.9rem;
+            color: var(--muted);
+            text-align: center;
+            margin-top: 24px;
+        }
+
+        @media (max-width: 640px) {
+            .app {
+                padding-top: 20px;
+                padding-bottom: 28px;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 16px;
+                align-items: flex-start;
+            }
+
+            .buses-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="app">
+        <div class="header">
+            <h1>Available Buses</h1>
+            <div class="header-buttons">
+                <button class="btn-logout" id="logoutBtn">Logout</button>
+            </div>
+        </div>
+
+        <div id="busesList" class="buses-grid"></div>
+        <div id="emptyState" class="empty-state" style="display: none;">
+            <h2>No Active Buses</h2>
+            <p>No buses are currently sharing their location. Try again later.</p>
+        </div>
+
+        <div class="refresh-info">
+            <p>Buses update their location every 30 seconds. Last refresh: <span id="lastRefresh">Just now</span></p>
+        </div>
+    </main>
+
+    <script>
+        const API_URL = "http://localhost:3000";
+        const STUDENT_STORAGE_KEY = "busTrackerStudentSessionV2";
+        const REFRESH_INTERVAL = 30000; // 30 seconds
+        let studentSession = null;
+        let userLocation = { latitude: null, longitude: null };
+
+        // Get student session
+        function getStudentSession() {
+            const session = localStorage.getItem(STUDENT_STORAGE_KEY);
+            if (!session) {
+                window.location.href = "student-login.html";
+                return;
+            }
+            return JSON.parse(session);
+        }
+
+        // Calculate distance between two points (Haversine formula)
+        function calculateDistance(lat1, lng1, lat2, lng2) {
+            const R = 6371; // Earth's radius in km
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLng = (lng2 - lng1) * Math.PI / 180;
+            const a = 
+                Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLng / 2) * Math.sin(dLng / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c;
+        }
+
+        // Get user location
+        function getUserLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        userLocation.latitude = position.coords.latitude;
+                        userLocation.longitude = position.coords.longitude;
+                    },
+                    (error) => {
+                        console.log("Geolocation not available, using default distances");
+                    }
+                );
+            }
+        }
+
+        // Fetch and display buses
+        async function refreshBuses() {
+            try {
+                const response = await fetch(`${API_URL}/active-buses`);
+                const data = await response.json();
+
+                if (!data.success || !data.buses.length) {
+                    document.getElementById("busesList").style.display = "none";
+                    document.getElementById("emptyState").style.display = "block";
+                    return;
+                }
+
+                document.getElementById("emptyState").style.display = "none";
+                document.getElementById("busesList").style.display = "grid";
+
+                const busesList = document.getElementById("busesList");
+                busesList.innerHTML = "";
+
+                // Sort buses by distance
+                const busesWithDistance = data.buses.map(bus => ({
+                    ...bus,
+                    distance: userLocation.latitude && userLocation.longitude 
+                        ? calculateDistance(
+                            userLocation.latitude, 
+                            userLocation.longitude,
+                            bus.currentLocation.latitude,
+                            bus.currentLocation.longitude
+                        )
+                        : null
+                })).sort((a, b) => {
+                    if (a.distance === null) return 1;
+                    if (b.distance === null) return -1;
+                    return a.distance - b.distance;
+                });
+
+                busesWithDistance.forEach(bus => {
+                    const distanceText = bus.distance 
+                        ? `${bus.distance.toFixed(1)} km away`
+                        : "Distance unknown";
+
+                    const card = document.createElement("a");
+                    card.href = `bus-info.html?busId=${bus.id}`;
+                    card.className = "bus-card";
+                    card.innerHTML = `
+                        <div class="bus-header">
+                            <div class="bus-number">${bus.busRepresentationNumber}</div>
+                            <div class="distance-badge">${distanceText}</div>
+                        </div>
+                        <div class="bus-info">
+                            <div class="info-row">
+                                <span class="info-label">Plate Number</span>
+                                <span class="info-value">${bus.busNumberPlate}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Driver</span>
+                                <span class="info-value">${bus.driverName}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Status</span>
+                                <span class="location-status">
+                                    <span class="status-dot"></span>
+                                    Live Location
+                                </span>
+                            </div>
+                        </div>
+                        <button class="view-button" type="button">View Details</button>
+                    `;
+                    busesList.appendChild(card);
+                });
+
+                // Update last refresh time
+                const now = new Date();
+                const timeStr = now.toLocaleTimeString();
+                document.getElementById("lastRefresh").textContent = timeStr;
+            } catch (error) {
+                console.error("Error fetching buses:", error);
+            }
+        }
+
+        // Logout handler
+        document.getElementById("logoutBtn").addEventListener("click", () => {
+            localStorage.removeItem(STUDENT_STORAGE_KEY);
+            window.location.href = "login.html";
+        });
+
+        // Initialize
+        (function init() {
+            studentSession = getStudentSession();
+            getUserLocation();
+            refreshBuses();
+            setInterval(refreshBuses, REFRESH_INTERVAL);
+        })();
+    </script>
+</body>
+</html>
